@@ -12,8 +12,8 @@ class MapNoise {
         static const int h = 500;
         static const int w = 500;
 
-        MapNoise(Map* mapObject);
-        MapNoise(Map* mapObject, long seed);
+        MapNoise(Map *mapObject);
+        MapNoise(Map *mapObject, long seed);
         ~MapNoise();
 
         void generate();
@@ -23,7 +23,7 @@ class MapNoise {
         float smooth(float x, float y, float s);
 
     private:
-        Map* mapObject;
+        Map *mapObject;
         long seed = 0;
         unsigned char perm[256] = {
             151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 

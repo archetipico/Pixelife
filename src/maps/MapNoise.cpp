@@ -8,8 +8,8 @@ MapNoise::MapNoise(Map *mapObject) {
 }
 
 /* Construct noise, receives map and seed */
-MapNoise::MapNoise(Map *Map, long seed) {
-    this->mapObject = Map;
+MapNoise::MapNoise(Map *mapObject, long seed) {
+    this->mapObject = mapObject;
     this->seed = seed;
 }
 
@@ -30,11 +30,12 @@ Generate noise:
 */
 void MapNoise::generate() {
     bool isGrass = false;
+    bool isBorderWater = true;
 
-    for(int y = 0; y < w; y++) {
-        for(int x = 0; x < h; x++) {
-            float ny = 2.0f * y / w - 1;
-            float nx = 2.0f * x / h - 1;
+    for(int y = 0; y < h; y++) {
+        for(int x = 0; x < w; x++) {
+            float ny = 2.0f * y / h - 1;
+            float nx = 2.0f * x / w - 1;
             float d = 1 - (1 - pow(ny, 2)) * (1 - pow(nx, 2));
             
             float e = 0.2 * getNoise(y, x, 5.0f) + 0.5 * getNoise(y, x, 2.0f);
@@ -44,6 +45,11 @@ void MapNoise::generate() {
             float val = pow(e, 4);
             if (val >= 0.09) {
                 isGrass = true;
+            }
+
+            if ((y == 0 || y == h - 1 || x == 0 || x == w - 1) && val >= 0.06) {
+                isBorderWater = false;
+                break;
             }
 
             float tree = getNoise(y, x, 20.0f) + getNoise(y, x, 10.0f);
@@ -56,7 +62,7 @@ void MapNoise::generate() {
         }
     }
 
-    if (!isGrass) {
+    if (!isGrass || !isBorderWater) {
         seed = rand();
         generate();
     }
@@ -64,15 +70,15 @@ void MapNoise::generate() {
 
 /* Get noise, freq is the wave frequency */
 float MapNoise::getNoise(int y, int x, float freq) {
-    float ny = (float) y / w - 0.5f;
-    float nx = (float) x / h - 0.5f;
+    float ny = (float) y / h - 0.5f;
+    float nx = (float) x / w - 0.5f;
 
     return noise2D(ny * freq, nx * freq);
 }
 
 /* Get permutation cell */
 unsigned char MapNoise::noise(int x) {
-    return perm[x + seed % 256];
+    return (perm[x % 256] * seed) % 256;
 }
 
 /* Thanks to https://github.com/SRombauts/SimplexNoise/blob/master/src/SimplexNoise.cpp */
@@ -87,8 +93,8 @@ float MapNoise::noise2D(float x, float y) {
     const float s = (x + y) * F2;  // Hairy factor for 2D
     const float xs = x + s;
     const float ys = y + s;
-    const int32_t i = floor(xs);
-    const int32_t j = floor(ys);
+    const int i = floor(xs);
+    const int j = floor(ys);
 
     // Unskew the cell origin back to (x,y) space
     const float t = static_cast<float>(i + j) * G2;
@@ -99,7 +105,7 @@ float MapNoise::noise2D(float x, float y) {
 
     // For the 2D case, the simplex shape is an equilateral triangle.
     // Determine which simplex we are in.
-    int32_t i1, j1;  // Offsets for second (middle) corner of simplex in (i,j) coords
+    int i1, j1;  // Offsets for second (middle) corner of simplex in (i,j) coords
     if (x0 > y0) {   // lower triangle, XY order: (0,0)->(1,0)->(1,1)
         i1 = 1;
         j1 = 0;

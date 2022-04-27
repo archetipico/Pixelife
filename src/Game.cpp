@@ -3,6 +3,7 @@
 #include "maps/Map.hpp"
 #include "maps/MapNoise.hpp"
 #include "textures/TextureManager.hpp"
+#include <SDL2/SDL_events.h>
 
 GameObject *player = nullptr;
 GameObject *enemy = nullptr;
@@ -25,6 +26,8 @@ Game::Game(const char *title, int x, int y, int w, int h, bool fscreen) {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
         out = window ? "Renderer OK" : "RENDERER FAILED";
         std::cout << out << std::endl;
+        	
+        IMG_Init(IMG_INIT_PNG);
 
         setRun(true);
     }
@@ -38,30 +41,32 @@ Game::Game(const char *title, int x, int y, int w, int h, bool fscreen) {
 }
 
 /* Destruct game */
-Game::~Game() {
-    SDL_DestroyWindow(window);
+Game::~Game() {	
     SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
 
-    window = nullptr;
     renderer = nullptr;
+    window = nullptr;
 }
 
 /* Handle game events */
 void Game::handle() {
     SDL_Event event;
-    SDL_PollEvent(&event);
-    switch (event.type) {
-        case SDL_QUIT:
-            quit();
-            break;
-        default:
-            break;
+    while(SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT:
+                quit();
+                break;
+            default:
+                break;
+        }
     }
 }
 
 /* Quit game */
 void Game::quit() {
-    setRun(false);    
+    IMG_Quit();
+    setRun(false);
     SDL_Quit();
 
     std::cout << "Goodbye" << std::endl;
